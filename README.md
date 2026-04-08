@@ -1,10 +1,10 @@
 # Energy Management System para Microredes usando Programación Lineal Mixta Entera (MILP)
 
-Optimización Matemática y Aplicaciones en Programación de la Producción
-**UTN Facultad Regional Santa Fe** – 2° Cuatrimestre 2025
+Optimización Matemática y Aplicaciones en Programación de la Producción  
+**UTN Facultad Regional Santa Fe** – 2° Cuatrimestre 2025  
 Trabajo Final
 
-**Docente:** Ing. Pablo A. Marchetti  
+**Docente:** Ing. Pablo A. Marchetti   
 **Alumno:** Marcos Santillán
 
 ---
