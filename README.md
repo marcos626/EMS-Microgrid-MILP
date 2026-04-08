@@ -29,11 +29,20 @@ El objetivo principal es minimizar el costo operativo de la microred mientras se
 ## Herramientas utilizadas
 
 - **Lenguaje:** Python
-- **Optimización:** PuLP (o el solver que estés usando: CBC, Gurobi, etc.)
+- **Modelado:** PYOMO
+- **Solver:** Gurobi
 - **Visualización y análisis:** Pandas, Matplotlib, Jupyter Notebook
 - **Entorno:** Jupyter Notebooks
 
 ---
 
 ## Referencias
-
+1. Balderrama et al. A two-stage linear programming optimization framework for isolated hybrid microgrids in a rural context: The case study of the “El Espino” community [2019].
+2. Li et al. Microgrid sizing with combined evolutionary algorithm and MILP unit commitment [2019].
+3. Luna et al. Mixed-Integer-Linear-Programming Based Energy Management System for Hybrid PVwind-battery Microgrids: Modelling, Design and Experimental Verification [2016].
+4. Nemati et al. Optimization of unit commitment and economic dispatch in microgrids based on genetic algorithm and mixed integer linear programming [2017].
+5. Nicolosi et al. Unit commitment optimization of a micro-grid with a MILP algorithm: Role of the emissions, bio-fuels and power generation technology [2021].
+6. Olivares et al. A centralized Energy Management System for isolated Microgrids [2014].
+7. Parisio. A Model Predictive Control Approach to Microgrid Operation Optimization [2014].
+8. Santillan-Lemus et al. Optimal Economic Dispatch in Microgrids with Renewable Energy Sources [2019].
+9. Williams. Model Building in Mathematical Programming (5th Edition) [2013].
