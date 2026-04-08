@@ -31,7 +31,7 @@ El objetivo principal es minimizar el costo operativo de la microred mientras se
 - **Lenguaje:** Python
 - **Modelado:** PYOMO
 - **Solver:** Gurobi
-- **Visualización y análisis:** Pandas, Matplotlib, Jupyter Notebook
+- **Visualización y análisis:** Pandas, Matplotlib
 - **Entorno:** Jupyter Notebooks
 
 ---
