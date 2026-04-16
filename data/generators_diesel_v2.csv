@@ -1,4 +1,4 @@
 generator_class,num_available,min_output,max_output,cost_per_hour,startup_cost,shutdown_cost,min_up_time,min_down_time,state0
-diesel_small,12,20.0,40.0,2.5,5.0,2.5,1,1,0
-diesel_med,10,50.0,100.0,5.8,12.0,6.0,1,1,0
-diesel_large,5,125.0,250.0,14.5,25.0,12.5,1,1,0
+diesel_small,12,20.0,40.0,2.5,5.0,2.5,1,1,12
+diesel_med,10,50.0,100.0,5.8,12.0,6.0,1,1,7
+diesel_large,5,125.0,250.0,14.5,25.0,12.5,1,1,5
