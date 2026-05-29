@@ -23,6 +23,7 @@ El objetivo principal es minimizar el costo operativo de la microred mientras se
 - `UC_v4.ipynb` → Se agregan restricciones de rampa (ramp-up y ramp-down) para limitar la tasa de cambio de producción entre períodos consecutivos. Las restricciones se formulan de manera trivialmente satisfecha (ramp_limit = Pmax) dado que los generadores diesel tienen una dinámica de carga mucho más rápida que el paso de tiempo de 1 hora.
 - `UC_v5.ipynb` → Se incorpora un generador fotovoltaico (GFV). Los datos de irradiancia y temperatura corresponden al parque solar de la UTN FR Santa Fe, día 01/01/2019 (promedios horarios).
 - `UC_v6.ipynb` → Conexión a la red de servicio (grid-tied operation). La microrred puede importar energía del mercado (`p_buy[t]`) o exportar excedentes (`p_sell[t]`). Se agrega una variable binaria `is_buying[t]` para garantizar que importación y exportación sean mutuamente excluyentes en cada período. Los precios horarios de compra/venta se basan en el perfil dinámico de Nemati et al. (BDEW, mercado alemán), escalado a $/kWh.
+- `UC_v7.ipynb` → Se incorporan los costos de emisión a la función objetivo, permitiendo evaluar el *trade-off* entre costos operativos y ambientales mediante un frente de Pareto. 
 
 ---
 
