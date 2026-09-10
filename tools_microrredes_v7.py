@@ -273,6 +273,11 @@ def extract_common_results(m, GENERATORS, T, BETA_DIESEL, BETA_GRID, ALPHA_CO2):
         'diesel_vals': [sum(pe.value(m.output[g, t]) for g in GENERATORS) for t in T],
         'num_active_vals': {g: [int(round(pe.value(m.num_active[g, t]))) for t in T] for g in GENERATORS},
         'output_vals': {g: [pe.value(m.output[g, t]) for t in T] for g in GENERATORS},
+        # NUEVO: desagregado por generador/periodo, para graficos de composicion
+        # de costo y costo marginal diesel (ver plot_cost_breakdown()).
+        'sigma_vals': {g: [pe.value(m.sigma[g, t]) for t in T] for g in GENERATORS},
+        'num_startup_vals': {g: [int(round(pe.value(m.num_startup[g, t]))) for t in T] for g in GENERATORS},
+        'num_shutdown_vals': {g: [int(round(pe.value(m.num_shutdown[g, t]))) for t in T] for g in GENERATORS},
     }
 
 
@@ -312,4 +317,126 @@ def plot_dispatch_heatmap(r, GENERATORS, label, filename):
     plt.tight_layout()
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     plt.show()
-    return fig
+    plt.close(fig)
+
+
+def plot_cost_breakdown(scenarios, GENERATORS, cost_per_hour, startup_cost, shutdown_cost,
+                         price_buy, price_sell, filename):
+    """
+    Para cada escenario (r, titulo) en `scenarios`, grafica una fila con:
+      - Costo marginal horario del diesel [$/kWh] vs. precios de compra/venta
+        de la red, sombreando las horas en que se importa.
+      - Composicion del costo operativo total (O&M fijo, combustible,
+        arranque, apagado, red compra/venta), como barras horizontales.
+
+    Version V7.1 del grafico de composicion de costos de UC_v6.ipynb
+    (celda 'Composicion_costo_total'), generalizado a N escenarios (p.ej.
+    los extremos min-costo / min-emisiones del frente epsilon-constraint)
+    y usando los campos ya calculados por extract_common_results() en vez
+    de recalcular todo desde el modelo pyomo resuelto.
+
+    `r` debe tener, ademas de los campos usuales: 'pbuy_vals', 'psell_vals',
+    'num_active_vals', 'sigma_vals', 'num_startup_vals', 'num_shutdown_vals',
+    'diesel_vals' y 'c_op' (costo operativo total, usado como denominador
+    de los porcentajes).
+    """
+    n = len(scenarios)
+    fig, axes = plt.subplots(n, 2, figsize=(14, 4.2 * n), squeeze=False)
+    hours = list(range(len(scenarios[0][0]['diesel_vals'])))
+
+    for row, (r, title) in enumerate(scenarios):
+        cost_om_h    = [sum(cost_per_hour[g] * r['num_active_vals'][g][t] for g in GENERATORS) for t in hours]
+        cost_fuel_h  = [sum(r['sigma_vals'][g][t] for g in GENERATORS) for t in hours]
+        cost_start_h = [sum(startup_cost[g] * r['num_startup_vals'][g][t] for g in GENERATORS) for t in hours]
+        cost_stop_h  = [sum(shutdown_cost[g] * r['num_shutdown_vals'][g][t] for g in GENERATORS) for t in hours]
+        hourly_diesel_cost = [cost_om_h[t] + cost_fuel_h[t] + cost_start_h[t] + cost_stop_h[t] for t in hours]
+        diesel_total = r['diesel_vals']
+        costo_marginal = [hourly_diesel_cost[t] / diesel_total[t] if diesel_total[t] > 1 else None for t in hours]
+
+        # ── Costo marginal horario vs. precios de red ────────────────────
+        ax1 = axes[row][0]
+        valid_h = [h for h in hours if costo_marginal[h] is not None]
+        valid_c = [costo_marginal[h] for h in valid_h]
+        ax1.plot(valid_h, valid_c, 'steelblue', lw=2, marker='o', ms=4, label='C.marginal diesel ($/kWh)')
+        ax1.step(hours, [price_buy[t] for t in hours], where='post', color='#e74c3c', lw=1.5, label='price_buy')
+        ax1.step(hours, [price_sell[t] for t in hours], where='post', color='#2ecc71', lw=1.5, ls='--', label='price_sell')
+        for t in hours:
+            if r['pbuy_vals'][t] > 0.1:
+                ax1.axvspan(t, t + 1, alpha=0.12, color='#9b59b6')
+        ax1.set_xlabel('Hora'); ax1.set_ylabel('$/kWh')
+        ax1.set_title(f'Costo Marginal Diesel vs. Precios de Red — {title}\n(sombreado = horas con importacion)')
+        ax1.set_xticks(range(0, 24, 3)); ax1.set_xticklabels([f'{h:02d}' for h in range(0, 24, 3)])
+        ax1.legend(loc='center', bbox_to_anchor=(0.2, 0.6), fontsize=8)
+        ax1.grid(alpha=0.3)
+
+        # ── Composicion del costo total ───────────────────────────────────
+        c_om_total    = sum(cost_om_h)
+        c_fuel_total  = sum(cost_fuel_h)
+        c_start_total = sum(cost_start_h)
+        c_stop_total  = sum(cost_stop_h)
+        total_cost_buy  = sum(price_buy[t] * r['pbuy_vals'][t] for t in hours)
+        total_rev_sell  = sum(price_sell[t] * r['psell_vals'][t] for t in hours)
+        costo_total = r['c_op']
+
+        ax2 = axes[row][1]
+        cost_components = {'O&M fijo': c_om_total, 'Combustible': c_fuel_total,
+                            'Arranque': c_start_total, 'Apagado': c_stop_total,
+                            'Red compra': total_cost_buy, 'Red venta': -total_rev_sell}
+        colors_bar = ['#3498db', '#e67e22', '#2ecc71', '#e74c3c', '#9b59b6', '#1abc9c']
+        labels_c = list(cost_components.keys())
+        values_c = list(cost_components.values())
+        bars = ax2.barh(labels_c, values_c, color=colors_bar, edgecolor='white', height=0.5)
+        for bar, val in zip(bars, values_c):
+            pct = 100 * val / costo_total
+            x_lbl = bar.get_width() + costo_total * 0.01 if val >= 0 else bar.get_width() - costo_total * 0.01
+            ha = 'left' if val >= 0 else 'right'
+            ax2.text(x_lbl, bar.get_y() + bar.get_height() / 2,
+                     f'${val:,.0f} ({pct:.1f}%)', ha=ha, va='center', fontsize=8)
+        ax2.axvline(0, color='black', lw=0.8)
+        ax2.set_xlabel('Costo [$]')
+        ax2.set_title(f'Composicion del Costo Total — {title}\n${costo_total:,.2f}')
+        ax2.invert_yaxis(); ax2.grid(alpha=0.3, axis='x')
+        ax2.spines[['top', 'right']].set_visible(False)
+
+    plt.tight_layout()
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.show()
+    plt.close(fig)
+
+
+def plot_emissions_stacked(scenarios, GENERATORS, BETA_DIESEL, BETA_GRID, filename):
+    """
+    Para cada escenario (r, titulo) en `scenarios`, grafica una fila con un
+    barras apiladas por hora: emisiones de la microrred (diesel, abajo) +
+    emisiones de la red por la energia importada (arriba), en kg de CO2.
+    Compara visualmente cuanto de la huella horaria total viene de generar
+    localmente vs. de comprarle a la red (cuyo factor de emision `BETA_GRID`
+    varia con la hora, ver celda de parametros de emisiones).
+    """
+    n = len(scenarios)
+    fig, axes = plt.subplots(n, 1, figsize=(14, 4 * n), sharex=True, squeeze=False)
+    hours = list(range(len(scenarios[0][0]['diesel_vals'])))
+
+    for row, (r, title) in enumerate(scenarios):
+        diesel_em = [sum(BETA_DIESEL[g] * r['output_vals'][g][t] for g in GENERATORS) for t in hours]
+        grid_em   = [BETA_GRID[t] * r['pbuy_vals'][t] for t in hours]
+
+        ax = axes[row][0]
+        ax.bar(hours, diesel_em, color='#3498db', label='Microrred (diesel)',
+               width=0.8, edgecolor='white', lw=0.4)
+        ax.bar(hours, grid_em, bottom=diesel_em, color='#e74c3c', label='Red (importacion)',
+               width=0.8, edgecolor='white', lw=0.4)
+        ax.set_ylabel('CO2 [kg]')
+        ax.set_title(f'{title}  —  Total: {sum(diesel_em) + sum(grid_em):.0f} kg CO2')
+        ax.legend(fontsize=8, loc='upper right')
+        ax.grid(alpha=0.3, axis='y')
+
+    axes[-1][0].set_xlabel('Hora')
+    axes[-1][0].set_xticks(range(0, 24, 3))
+    axes[-1][0].set_xticklabels([f'{h:02d}' for h in range(0, 24, 3)])
+    fig.suptitle('Emisiones CO2 horarias: Microrred (diesel) vs. Red de servicio (importacion)',
+                 fontsize=12, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    plt.show()
+    plt.close(fig)
