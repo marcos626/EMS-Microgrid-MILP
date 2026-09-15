@@ -306,7 +306,7 @@ def plot_dispatch_heatmap(r, GENERATORS, label, filename):
     """
     active_matrix, output_matrix = build_dispatch_matrices(r, GENERATORS)
 
-    fig, axes = plt.subplots(2, 1, figsize=(14, 6))
+    fig, axes = plt.subplots(2, 1, figsize=(12, 6))
     sns.heatmap(active_matrix, annot=True, fmt='d', cmap='YlOrRd',
                 linewidths=0.5, cbar_kws={'label': 'Unidades activas'}, ax=axes[0])
     axes[0].set_title(f'Unidades Activas por Clase y Periodo — {label}')
