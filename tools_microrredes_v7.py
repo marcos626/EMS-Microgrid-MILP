@@ -368,7 +368,7 @@ def plot_cost_breakdown(scenarios, GENERATORS, cost_per_hour, startup_cost, shut
         ax1.set_xlabel('Hora'); ax1.set_ylabel('$/kWh')
         ax1.set_title(f'Costo Marginal Diesel vs. Precios de Red — {title}\n(sombreado = horas con importacion)')
         ax1.set_xticks(range(0, 24, 3)); ax1.set_xticklabels([f'{h:02d}' for h in range(0, 24, 3)])
-        ax1.legend(loc='center', bbox_to_anchor=(0.2, 0.6), fontsize=8)
+        ax1.legend(loc='center', bbox_to_anchor=(0.2, 0.8), fontsize=8)
         ax1.grid(alpha=0.3)
 
         # ── Composicion del costo total ───────────────────────────────────
