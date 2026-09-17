@@ -1,1 +1,4 @@
 .env
+
+# Imagenes generadas por los notebooks (se regeneran al re-ejecutar, solo locales)
+images_v*/
