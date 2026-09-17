@@ -56,7 +56,8 @@ def compute_sigma_upper_bound(generators, quad_params, max_output):
     """
     Cota superior de sigma[g,t]: el valor de la curva de costo CUADRATICA
     real evaluada en max_output[g] (el mayor valor de la envolvente de
-    segmentos, ya que sigma aproxima por arriba una funcion convexa).
+    segmentos, ya que sigma aproxima por arriba una funcion convexa),
+    incluyendo el termino de consumo en vacio 'c' (analogo al a3 de Parisio).
 
     No es estrictamente necesaria para la optimalidad (el objetivo minimiza
     sigma con signo positivo, y las restricciones ya lo empujan a su valor
@@ -64,6 +65,7 @@ def compute_sigma_upper_bound(generators, quad_params, max_output):
     robusto ante instancias mal escaladas o degeneradas.
     """
     return {g: quad_params[g]['a'] * max_output[g]**2 + quad_params[g]['b'] * max_output[g]
+            + quad_params[g]['c']
             for g in generators}
 
 
@@ -414,7 +416,7 @@ def plot_emissions_stacked(scenarios, GENERATORS, BETA_DIESEL, BETA_GRID, filena
     varia con la hora, ver celda de parametros de emisiones).
     """
     n = len(scenarios)
-    fig, axes = plt.subplots(n, 1, figsize=(14, 4 * n), sharex=True, squeeze=False)
+    fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), sharex=True, squeeze=False)
     hours = list(range(len(scenarios[0][0]['diesel_vals'])))
 
     for row, (r, title) in enumerate(scenarios):
